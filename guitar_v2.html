@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+noscript{position:absolute;}
+h3{margin:-0.5em 0 0 0}
+select{height:1.5em}
+table{border-collapse:collapse;table-layout:fixed;margin:1em;}
+button{border:solid black;color:black;background-color:white;padding:0.1em;text-align:center;text-decoration:none;display:inline-block;font-size:2em;}
+th,td{height:4em;width:4em;}
+td{background-color:white;border:1px solid black;padding:0;}
+.nut{background-color: black; height:0.4em}
+.noborder,.space1{background-color:white;border:none}
+.short{height:0.4em;}
+td{font-size:1em;}
+/*dot*/
+td:before{text-align:center;width:2em;height:2em;border-radius:1em;display:inline-block;margin: 0.2em 0 0 -1em;}
+.triangle input{width: 2em;}
+.triangle:after{content:'';position:absolute;display:block;border-color:black transparent;border-style:solid;border-width:0 1em 1em 0;height:0;width:0;margin:-0.1em 0 0 0;}
+.dot:before{content:'';color:white;background-color:black;}
+.deselected:before{background-color:DarkGray;}
+.A:before{content:'A'}
+.B:before{content:'B'}
+.C:before{content:'C'}
+.D:before{content:'D'}
+.E:before{content:'E'}
+.F:before{content:'F'}
+.G:before{content:'G'}
+.T:before{content:'T'}
+.T1:before{content:'1'}
+.T2:before{content:'2'}
+.T3:before{content:'3'}
+.T4:before{content:'4'}
+.X:before{content:'\d7';font-weight:bold;font-size:1.3rem;margin:-1rem 0 -0.5rem -0.5rem;}
+/*open string empty dot*/
+.O:before{content:'';background-color:white;border:solid black 0.1em;width:1em;height:1em;margin:-0.8em 0 0.1em -0.3em;}
+</style>
+<script language="javascript">
+var t = document.createElement("table");
+var chordrow = document.createElement("tr");
+var strings = 6;
+//var string_notes = [7,0,5,10,2,7];
+//var string_notes = [40,45,50,55,59,64]; 
+//Right to left: ebgdae every body goes down and eat
+var string_notes = [40,45,50,55,59,64]; 
+
+var string_initialiser = [0,0,0,0,0,0];
+var string_options = [0,0,0,0,0,0];
+//var notes = ["A","A#","B","C","C#","D","D#","E","F","F#","G","G#"];
+var notes = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+var majorscale_shift = [0,2,4,5,7,9,11];
+var majorscale_ref = [0,2,4,5,7,9,11];
+var minorscale_ref = [0,2,4,5,7,9,11];
+function simplifyNote(x) {var n=x; while (n>11) n-=12; while (n<0) n+=12; return n;}
+function getChordRoot() {
+    return simplifyNote(parseInt(document.getElementById("chord_root").value));
+    //return simplifyNote(parseInt(document.getElementById("chord_root_letter").value) + parseInt(document.getElementById("chord_root_accidental").value));
+}
+function displayStringOptions(newstringoptions)
+{
+    var row = t.rows[0];
+    var c;
+    for (c = 0; c < strings; c++) {row.cells[c].firstChild.innerHTML = newstringoptions[c];}
+}
+function getNote(note, scale) {
+	var s = simplifyNote(note);
+
+}
+function getChord() {
+    var chord = [];
+    var root = getChordRoot();
+    var notes = document.getElementById("chord_quality").value.split(",");
+	var n;
+    for (n = 0; n < notes.length; n++) {
+        chord.push(simplifyNote(root + parseInt(notes[n])));
+    }
+    return chord;
+}
+function generateOptions(chord, stringnotes) {
+    var newstringoptions = string_initialiser.slice();
+    var found_notes = string_initialiser.slice();
+    
+    var newnotes = stringnotes.slice();
+    var searchnotes = chord.slice();
+    //check open strings
+    var row = t.rows[2];
+    var c;
+    for (c = 0; c < row.cells.length; c++) {
+        if (chord.indexOf(newnotes[c]) >= 0) {
+                    found_notes[c] = 2;
+        }
+        /*
+        	var match = searchnotes.indexOf(newnotes[c]);
+            if (match>= 0) {
+                    found_notes[c] = 2;
+            	searchnotes.splice(match, 1);
+                row.cells[c].className="O";
+                if (stringoptions_counter[c]-- != 0) {
+                    row.cells[c].className+=" deselected"
+                } else {
+                }
+            }
+        }
+            */
+        row.cells[c].className+=" short noborder";
+        newnotes[c] = simplifyNote(newnotes[c] + 1);
+    }
+	var r;
+    for (r = 4; r < t.rows.length; r++) { 
+        row = t.rows[r];
+        for (c = 0; c < row.cells.length; c++) {
+        	row.cells[c].className="";
+            row.cells[c].innerHTML= "&nbsp" + notes[newnotes[c]]
+        	if (chord.indexOf(newnotes[c]) >= 0) {
+            	row.cells[c].className="deselected dot";
+                var match = searchnotes.indexOf(newnotes[c])
+                var being_searched_for = (match >= 0);
+                console.log(found_notes[c]);
+                if (found_notes[c]) {
+                } else {//string not matched previously
+                    row.cells[c].className="dot";
+                    if (being_searched_for) {
+                        searchnotes.splice(match, 1);
+                        }
+                    
+                    row.cells[c].className="deselected dot";
+                    if (being_searched_for) {
+                        searchnotes.splice(match, 1);
+                        row.cells[c].className="dot";
+                    }
+                }
+                    //--stringoptions_counter[c];
+            }
+            newnotes[c] = simplifyNote(newnotes[c] + 1);
+        }
+        row.cells[row.cells.length - 1].className+=" noborder";
+        
+    }
+    return newstringoptions;
+}
+function updateTable(chord, stringnotes, stringoptions) {
+    var newnotes = stringnotes.slice();
+    var stringoptions_counter = stringoptions.slice();
+    //display open and muted strings
+    var row = t.rows[2];
+    var c;
+    var cell;
+    for (c = 0; c < row.cells.length; c++) {
+        cell = row.cells[c]
+        if (stringoptions_counter[c] == -1) {
+            cell.className="X";//muted string
+        } else {
+            cell.className="";
+            //if (chord.indexOf(newnotes[c]) >= 0) {
+            if (chord.indexOf(simplifyNote(newnotes[c])) >= 0) {
+                if (stringoptions_counter[c] == 0) cell.className="O"; 
+                --stringoptions_counter[c];
+            }
+        }
+        cell.className+=" short noborder";
+        //newnotes[c] = simplifyNote(newnotes[c] + 1);
+            newnotes[c] += 1;
+    }
+	var r;
+    for (r = 4; r < t.rows.length; r++) { 
+        row = t.rows[r];
+        for (c = 0; c < strings; c++) {
+            cell = row.cells[c];
+        	cell.className="";
+            //cell.innerHTML= "&nbsp" + notes[newnotes[c]]
+            cell.innerHTML= "&nbsp" + notes[simplifyNote(newnotes[c])] + Math.floor(newnotes[c]/12);
+            //if (chord.indexOf(newnotes[c]) >= 0) {
+            if (chord.indexOf(simplifyNote(newnotes[c])) >= 0) {
+                if (stringoptions_counter[c] == 0) {row.cells[c].className="dot";} else {row.cells[c].className="deselected dot";}
+                --stringoptions_counter[c];
+            }
+            //newnotes[c] = simplifyNote(newnotes[c] + 1);
+            newnotes[c] += 1;
+        }
+        cell.className+=" noborder";
+    }
+}
+function modifyRows(newrows) {
+    var newtablerows = newrows + 3
+    while (t.rows.length > newtablerows) {t.deleteRow(t.rows.length - 1);}
+    while (t.rows.length < newtablerows) {
+        var row = t.insertRow(t.rows.length);
+        var td;
+        for (i = 0; i < strings; i++) { 
+            td = row.appendChild(document.createElement('td'));
+            td.innerHTML = "&nbsp";
+        }
+        td.className = "noborder";
+    }
+}
+function showchord(chord) {
+	chordrow.innerHTML = "";
+    for (n = 0; n < chord.length; n++) {
+    	var col = document.createElement("td")
+       col.innerHTML = notes[chord[n]];
+       chordrow.appendChild(col);
+    }
+}
+function update()
+{
+    var chord = getChord();
+    showchord(chord);
+    string_options = generateOptions(chord, string_notes);
+    displayStringOptions(string_options);
+    updateTable(chord, string_notes, string_options);
+}
+/*
+function createButtonClickFunction(i)
+{return function() {
+            var input = parseInt(window.prompt("change option to", string_options[i]));
+            if (!isNaN(input)) string_options[i] = input;
+            displayStringOptions(string_options);
+            updateTable(getChord(), string_notes, string_options);
+        };
+}*/
+
+function createinputChangeFunction(i, elem)
+{return function() {
+            string_options[i] = elem.value;
+            displayStringOptions(string_options);
+            updateTable(getChord(), string_notes, string_options);
+        };
+}
+
+function createinputWheelFunction(i, elem)
+{return function(e) {
+    e.preventDefault();
+            if (e.deltaY > 0) {
+                if (string_options[i] < elem.max) string_options[i] += 1;
+            } else {
+                if (string_options[i] > elem.min) string_options[i] -= 1;
+            }
+            elem.value = string_options[i];
+            displayStringOptions(string_options);
+            updateTable(getChord(), string_notes, string_options);
+        };
+}
+window.onload = function(e) {
+    m = document.getElementById("main");
+    var i;
+    var th, td;
+    var row0 = document.getElementById("output").appendChild(t).insertRow(0);
+    for (i = 0; i < strings; i++) { 
+    	//var btn = document.createElement("button");
+        //btn.onclick = createButtonClickFunction(i);
+        var num = document.createElement("input");
+        num.type = "number";
+        num.value = string_options[i]
+        num.max = 9;
+        num.min = -1;
+        num.oninput = createinputChangeFunction(i, num);
+        num.onwheel = createinputWheelFunction(i, num);
+        th = row0.appendChild(document.createElement('th'));
+        th.appendChild(num);
+        //th.appendChild(btn).innerHTML = string_options[i];
+        th.className = "triangle";
+    }
+    var row1 = t.insertRow(1);
+    for (i = 0; i < strings; i++) { 
+        td = row1.appendChild(document.createElement('td'));
+        td.className = "noborder" + ' ' + notes[simplifyNote(string_notes[i])];
+    }
+    var row2 = t.insertRow(2);
+    row2.className = "short";
+    for (i = 0; i < strings; i++) { 
+        td = row2.appendChild(document.createElement('td'));
+        td.className = "short";
+        td.className = "noborder";
+    }
+
+    var row2a = t.insertRow(2);
+    row2a.className = "short";
+    for (i = 0; i < strings; i++) { 
+        td = row2a.appendChild(document.createElement('td'));
+        td.className = "short";
+        td.className = "noborder";
+        td.innerHTML= "&nbsp" + notes[simplifyNote(string_notes[i])] + Math.floor(string_notes[i]/12);
+    }
+
+    var row3 = t.insertRow(3);
+    for (i = 0; i < strings; i++) { 
+        td = row3.appendChild(document.createElement('td'));
+        td.className = "nut";
+    }
+    td.className = 'nut noborder';
+    m.style.display = "";
+    modifyRows(19);
+    document.getElementById("chord").appendChild(chordrow)
+    update();
+}
+
+
+</script>
+</head>
+<body>
+<noscript>Javascript is required for this page to function.</noscript>
+<div id="main" style="display:none;">
+<h3>fretboard chord chart diagrams generator</h3>
+<div>
+<select id="chord_root" onchange="update()">
+	<!--
+  <option value="0">A</option>
+  <option value="1">A#/Bb</option>
+  <option value="2">B</option>
+  <option value="3">C</option>
+  <option value="4">C#/Db</option>
+  <option value="5">D</option>
+  <option value="6">D#/Eb</option>
+  <option value="7">E</option>
+  <option value="8">F</option>
+  <option value="9">F#/Gb</option>
+  <option value="10">G</option>
+  <option value="11">G#/Ab</option>
+-->
+  <option value="0">C</option>
+  <option value="1">C#/Db</option>
+  <option value="2">D</option>
+  <option value="3">D#/Eb</option>
+  <option value="4">E</option>
+  <option value="5">F</option>
+  <option value="6">F#/Gb</option>
+  <option value="7">G</option>
+  <option value="8">G#/Ab</option>
+  <option value="9">A</option>
+  <option value="10">A#/Bb</option>
+  <option value="11">B</option>
+</select>
+<!--
+<select id="chord_root_letter" onchange="update()">
+  <option value="0">A</option>
+  <option value="2">B</option>
+  <option value="3">C</option>
+  <option value="5">D</option>
+  <option value="7">E</option>
+  <option value="8">F</option>
+  <option value="10">G</option>
+</select>
+<select id="chord_root_accidental" onchange="update()">
+  <option value="0">natural (&#x266E;)</option>
+  <option value="-1">flat (&#9837;)</option>
+  <option value="1">sharp (&#9839;)</option>
+</select>
+!-->
+<select id="chord_quality" onchange="update()">
+  <option value="0,4,7">major (&Delta;)</option>
+  <option value="0,3,7">minor (m/-)</option>
+  <option value="0,7">fifth (5)</option>
+  <option value="0,4,7,8">major sixth (6)</option>
+  <option value="0,3,7,8">minor sixth (m6)</option>
+  <option value="0,4,7,10">major seventh (7)</option>
+  <option value="0,3,7,9">minor seventh (m7)</option>
+  <option value="0,3,7,10">minor major seventh (mM7)</option>
+  <option value="0,4,7,11,14">major 9th (maj9)</option>
+  <option value="0,3,7,10,14">minor 9th (m9/min9)</option>
+  <option value="0,4,7,10,14">dominant 9th (9)</option>
+  <option value="0,5,7">suspended fourth (sus/sus4)</option>
+  <option value="0,2,7">suspended second (sus2)</option>
+  <option value="0,4,8">augmented (+/aug)</option>
+  <option value="0,4,6">diminished (o/dim)</option>
+  <option value="0,4,8,11">augmented seventh(+7/7+5/7#5)</option>
+  <option value="0,4,6,11">diminshed seventh(o7)</option>
+  <option value="0,3,6,11">half-diminished (&#x2300;7)</option>
+</select>
+<table id="chord"></table>
+</div>
+<div id="output"></div>
+</div>
+</body>
+</html>
