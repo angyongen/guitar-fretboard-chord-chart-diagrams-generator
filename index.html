@@ -32,7 +32,7 @@ td:before{text-align:center;width:2em;height:2em;border-radius:1em;display:inlin
 .T2:before{content:'2'}
 .T3:before{content:'3'}
 .T4:before{content:'4'}
-.X:before{content:'\d7';font-weight:bold;font-size:1.3rem;margin:-1rem 0 -0.5rem -0.5rem;}
+.X:before{content:'\d7';font-weight:bold;font-size:1.3rem;width:1em;height:1em;margin:-1rem 0 -0.5rem -0.5rem;}
 /*open string empty dot*/
 .O:before{content:'';background-color:white;border:solid black 0.1em;width:1em;height:1em;margin:-0.8em 0 0.1em -0.3em;}
 </style>
@@ -45,8 +45,8 @@ var strings = 6;
 //Right to left: ebgdae every body goes down and eat
 var string_notes = [40,45,50,55,59,64]; 
 
-var string_initialiser = [0,0,0,0,0,0];
-var string_options = [0,0,0,0,0,0];
+var string_initialiser = [-1,-1,-1,-1,-1,-1];
+var string_options = [-1,-1,-1,-1,-1,-1];
 //var notes = ["A","A#","B","C","C#","D","D#","E","F","F#","G","G#"];
 var notes = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var majorscale_shift = [0,2,4,5,7,9,11];
@@ -302,6 +302,7 @@ window.onload = function(e) {
 <noscript>Javascript is required for this page to function.</noscript>
 <div id="main" style="display:none;">
 <h3>fretboard chord chart diagrams generator</h3>
+click a note for each string
 <div>
 <select id="chord_root" onchange="update()">
 	<!--
