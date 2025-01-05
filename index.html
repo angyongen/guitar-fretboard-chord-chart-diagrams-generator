@@ -35,6 +35,10 @@ td:before{text-align:center;width:2em;height:2em;border-radius:1em;display:inlin
 .X:before{content:'\d7';font-weight:bold;font-size:1.3rem;width:1em;height:1em;margin:-1rem 0 -0.5rem -0.5rem;}
 /*open string empty dot*/
 .O:before{content:'';background-color:white;border:solid black 0.1em;width:1em;height:1em;margin:-0.8em 0 0.1em -0.3em;}
+.fulfilled1 {background: #90ee90;}
+.fulfilled2 {background: #20bb20; }
+.fulfilled3 {background: #109010; color: white}
+.unfulfilled {background: lightpink; }
 </style>
 <script language="javascript">
 var t = document.createElement("table");
@@ -55,6 +59,7 @@ var majorscale_shift = [0,2,4,5,7,9,11];
 var majorscale_ref = [0,2,4,5,7,9,11];
 var minorscale_ref = [0,2,4,5,7,9,11];
 function simplifyNote(x) {var n=x; while (n>11) n-=12; while (n<0) n+=12; return n;}
+function noteString(x) {return notes[simplifyNote(x)] + Math.floor(x/12);}
 function getChordRoot() {
     return simplifyNote(parseInt(document.getElementById("chord_root").value));
     //return simplifyNote(parseInt(document.getElementById("chord_root_letter").value) + parseInt(document.getElementById("chord_root_accidental").value));
@@ -67,7 +72,6 @@ function displayStringOptions(newstringoptions)
 }
 function getNote(note, scale) {
 	var s = simplifyNote(note);
-
 }
 function getChord() {
     var chord = [];
@@ -158,6 +162,7 @@ function updateTable(chord, stringnotes, stringoptions) {
     var newnotes = stringnotes.slice();
     var stringoptions_counter = stringoptions.slice();
     var newstringoptions = string_initialiser.slice();
+    var result_tabnotes = stringnotes.slice();
     //display open and muted strings
     var row = t.rows[2];
     var c;
@@ -173,6 +178,7 @@ function updateTable(chord, stringnotes, stringoptions) {
         if (stringoptions_counter[c] == -1) {
             cell.className="X";//muted string
             //cell.dataset.s = 0;
+            result_tabnotes[c] = NaN;
         } else {
           
             cell.className="";
@@ -181,6 +187,7 @@ function updateTable(chord, stringnotes, stringoptions) {
                 if (stringoptions_counter[c] == 0) {
                   cell.className="O"; 
                   cell.dataset.s = -1;
+                  //result_tabnotes[c] = newnotes[c]
                 }
                 --stringoptions_counter[c];
 
@@ -199,12 +206,15 @@ function updateTable(chord, stringnotes, stringoptions) {
         	cell.className="";
         	cell.dataset.s = undefined;
             //cell.innerHTML= "&nbsp" + notes[newnotes[c]]
-            cell.innerHTML= "&nbsp" + notes[simplifyNote(newnotes[c])] + Math.floor(newnotes[c]/12);
+            cell.innerHTML= "&nbsp" + noteString(newnotes[c]);
             //if (chord.indexOf(newnotes[c]) >= 0) {
             if (chord.indexOf(simplifyNote(newnotes[c])) >= 0) {
                 ++newstringoptions[c];
                 row.cells[c].dataset.s = newstringoptions[c];
-                if (stringoptions_counter[c] == 0) {row.cells[c].className="dot";} else {row.cells[c].className="deselected dot";}
+                if (stringoptions_counter[c] == 0) {
+                  row.cells[c].className="dot";
+                  result_tabnotes[c] = newnotes[c];
+                } else {row.cells[c].className="deselected dot";}
                 --stringoptions_counter[c];
 
             }
@@ -213,6 +223,10 @@ function updateTable(chord, stringnotes, stringoptions) {
         }
         cell.className+=" noborder";
     }
+    return result_tabnotes
+}
+function updateTables(chord, string_notes, string_options) {
+  showchord(chord, updateTable(chord, string_notes, string_options));
 }
 function createTdClickFunction(td, row, str) {
   return function(e) {
@@ -226,7 +240,8 @@ function createTdClickFunction(td, row, str) {
       //td.innerHTML +="#"+string_initialiser_chord[str] +"#"+selection+"#"+row+"#"+str;
       string_options[str] = selection;
       displayStringOptions(string_options);
-      updateTable(getChord(), string_notes, string_options);
+      var chord = getChord()
+      updateTables(chord, string_notes, string_options);
     }
   }
 }
@@ -246,22 +261,39 @@ function modifyRows(newrows) {
         td.className = "noborder";
     }
 }
-function showchord(chord) {
+function showchord(chord, input_tabnotes) {
+  tabnotes = input_tabnotes.slice();
 	chordrow.innerHTML = "";
     for (n = 0; n < chord.length; n++) {
+      var fufilled = [];
+      for (tn = 0; tn < tabnotes.length; tn++) {
+        if (simplifyNote(tabnotes[tn]) == chord[n]) {
+          fufilled.push(noteString(tabnotes[tn]))
+          tabnotes[tn] = NaN;
+        }
+      }
     	var col = document.createElement("td")
-       col.innerHTML = notes[chord[n]];
+       col.innerHTML = notes[chord[n]]
+       if (fufilled.length > 0) {
+         col.innerHTML += "(" +fufilled.join(",")+")";
+         var fufilledlength = fufilled.length;
+         if (fufilledlength > 3) fufilledlength = 3;
+         col.className ="fulfilled" + fufilledlength
+         
+       } else {
+         col.className = "unfulfilled";
+       }
        chordrow.appendChild(col);
     }
 }
 function update()
 {
     var chord = getChord();
-    showchord(chord);
+    //showchord(chord);
     string_initialiser_chord = generateOptions(chord, string_notes);
     string_options = string_initialiser_chord.slice()
     displayStringOptions(string_options);
-    updateTable(chord, string_notes, string_options);
+    updateTables(chord, string_notes, string_options);
 }
 /*
 function createButtonClickFunction(i)
@@ -269,7 +301,7 @@ function createButtonClickFunction(i)
             var input = parseInt(window.prompt("change option to", string_options[i]));
             if (!isNaN(input)) string_options[i] = input;
             displayStringOptions(string_options);
-            updateTable(getChord(), string_notes, string_options);
+            updateTables(getChord(), string_notes, string_options);
         };
 }*/
 
@@ -277,7 +309,7 @@ function createinputChangeFunction(i, elem)
 {return function() {
             string_options[i] = elem.value;
             displayStringOptions(string_options);
-            updateTable(getChord(), string_notes, string_options);
+            updateTables(getChord(), string_notes, string_options);
         };
 }
 
@@ -291,7 +323,7 @@ function createinputWheelFunction(i, elem)
             }
             elem.value = string_options[i];
             displayStringOptions(string_options);
-            updateTable(getChord(), string_notes, string_options);
+            updateTables(getChord(), string_notes, string_options);
         };
 }
 window.onload = function(e) {
