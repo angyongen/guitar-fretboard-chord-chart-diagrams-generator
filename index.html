@@ -46,7 +46,9 @@ var strings = 6;
 var string_notes = [40,45,50,55,59,64]; 
 
 var string_initialiser = [-1,-1,-1,-1,-1,-1];
+var string_initialiser_chord = [-1,-1,-1,-1,-1,-1]; //selected chord has open string, < initialiser
 var string_options = [-1,-1,-1,-1,-1,-1];
+//var string_options_elements = [];
 //var notes = ["A","A#","B","C","C#","D","D#","E","F","F#","G","G#"];
 var notes = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var majorscale_shift = [0,2,4,5,7,9,11];
@@ -61,7 +63,7 @@ function displayStringOptions(newstringoptions)
 {
     var row = t.rows[0];
     var c;
-    for (c = 0; c < strings; c++) {row.cells[c].firstChild.innerHTML = newstringoptions[c];}
+    for (c = 0; c < strings; c++) {row.cells[c].firstChild.value = newstringoptions[c];}
 }
 function getNote(note, scale) {
 	var s = simplifyNote(note);
@@ -78,6 +80,19 @@ function getChord() {
     return chord;
 }
 function generateOptions(chord, stringnotes) {
+  var newstringoptions = string_initialiser.slice();
+  var newnotes = stringnotes.slice();
+  //check open strings
+  var row = t.rows[2];
+  var c;
+  for (c = 0; c < row.cells.length; c++) {
+      if (chord.indexOf(simplifyNote(newnotes[c])) >= 0) {
+                    newstringoptions[c] = 0;
+      }
+  }
+  return newstringoptions;
+}
+function generateOptionsOld(chord, stringnotes) {
     var newstringoptions = string_initialiser.slice();
     var found_notes = string_initialiser.slice();
     
@@ -142,22 +157,36 @@ function generateOptions(chord, stringnotes) {
 function updateTable(chord, stringnotes, stringoptions) {
     var newnotes = stringnotes.slice();
     var stringoptions_counter = stringoptions.slice();
+    var newstringoptions = string_initialiser.slice();
     //display open and muted strings
     var row = t.rows[2];
     var c;
     var cell;
     for (c = 0; c < row.cells.length; c++) {
         cell = row.cells[c]
+        
+        if (chord.indexOf(simplifyNote(newnotes[c])) >= 0) {                ++newstringoptions[c];
+        cell.dataset.s = 0;
+        } else {
+          cell.dataset.s = -1;
+        }
         if (stringoptions_counter[c] == -1) {
             cell.className="X";//muted string
+            //cell.dataset.s = 0;
         } else {
+          
             cell.className="";
             //if (chord.indexOf(newnotes[c]) >= 0) {
             if (chord.indexOf(simplifyNote(newnotes[c])) >= 0) {
-                if (stringoptions_counter[c] == 0) cell.className="O"; 
+                if (stringoptions_counter[c] == 0) {
+                  cell.className="O"; 
+                  cell.dataset.s = -1;
+                }
                 --stringoptions_counter[c];
+
             }
         }
+        
         cell.className+=" short noborder";
         //newnotes[c] = simplifyNote(newnotes[c] + 1);
             newnotes[c] += 1;
@@ -168,12 +197,16 @@ function updateTable(chord, stringnotes, stringoptions) {
         for (c = 0; c < strings; c++) {
             cell = row.cells[c];
         	cell.className="";
+        	cell.dataset.s = undefined;
             //cell.innerHTML= "&nbsp" + notes[newnotes[c]]
             cell.innerHTML= "&nbsp" + notes[simplifyNote(newnotes[c])] + Math.floor(newnotes[c]/12);
             //if (chord.indexOf(newnotes[c]) >= 0) {
             if (chord.indexOf(simplifyNote(newnotes[c])) >= 0) {
+                ++newstringoptions[c];
+                row.cells[c].dataset.s = newstringoptions[c];
                 if (stringoptions_counter[c] == 0) {row.cells[c].className="dot";} else {row.cells[c].className="deselected dot";}
                 --stringoptions_counter[c];
+
             }
             //newnotes[c] = simplifyNote(newnotes[c] + 1);
             newnotes[c] += 1;
@@ -181,15 +214,34 @@ function updateTable(chord, stringnotes, stringoptions) {
         cell.className+=" noborder";
     }
 }
+function createTdClickFunction(td, row, str) {
+  return function(e) {
+    var selection = parseInt(td.dataset.s);
+    //console.log(selection)
+    
+    if (!isNaN(selection)) {
+      if (parseInt(string_options[str]) == selection) {
+        selection = string_initialiser_chord[str];
+      }
+      //td.innerHTML +="#"+string_initialiser_chord[str] +"#"+selection+"#"+row+"#"+str;
+      string_options[str] = selection;
+      displayStringOptions(string_options);
+      updateTable(getChord(), string_notes, string_options);
+    }
+  }
+}
 function modifyRows(newrows) {
     var newtablerows = newrows + 3
+    var rowNum = 1;
     while (t.rows.length > newtablerows) {t.deleteRow(t.rows.length - 1);}
     while (t.rows.length < newtablerows) {
         var row = t.insertRow(t.rows.length);
         var td;
+        rowNum += 1;
         for (i = 0; i < strings; i++) { 
             td = row.appendChild(document.createElement('td'));
             td.innerHTML = "&nbsp";
+            td.onclick = createTdClickFunction(td, rowNum, i);
         }
         td.className = "noborder";
     }
@@ -206,7 +258,8 @@ function update()
 {
     var chord = getChord();
     showchord(chord);
-    string_options = generateOptions(chord, string_notes);
+    string_initialiser_chord = generateOptions(chord, string_notes);
+    string_options = string_initialiser_chord.slice()
     displayStringOptions(string_options);
     updateTable(chord, string_notes, string_options);
 }
@@ -272,6 +325,7 @@ window.onload = function(e) {
         td = row2.appendChild(document.createElement('td'));
         td.className = "short";
         td.className = "noborder";
+        td.onclick = createTdClickFunction(td, 1, i);
     }
 
     var row2a = t.insertRow(2);
@@ -281,12 +335,14 @@ window.onload = function(e) {
         td.className = "short";
         td.className = "noborder";
         td.innerHTML= "&nbsp" + notes[simplifyNote(string_notes[i])] + Math.floor(string_notes[i]/12);
+        td.onclick = createTdClickFunction(td, 0, i);
     }
 
     var row3 = t.insertRow(3);
     for (i = 0; i < strings; i++) { 
         td = row3.appendChild(document.createElement('td'));
         td.className = "nut";
+        td.onclick = createTdClickFunction(td, 0, i);
     }
     td.className = 'nut noborder';
     m.style.display = "";
