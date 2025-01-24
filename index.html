@@ -8,14 +8,22 @@ h3{margin:-0.5em 0 0 0}
 select{height:1.5em}
 table{border-collapse:collapse;table-layout:fixed;margin:1em;}
 button{border:solid black;color:black;background-color:white;padding:0.1em;text-align:center;text-decoration:none;display:inline-block;font-size:2em;}
+.openable {border: 1px solid black;}
+.opener{text-align:left; width: 100%; font-size:initial; color: #444; border:none; background-color: #eee; padding: 0.3em 1em;}
+.opener:after {content:'\2795';/*+*/ float: right;}
+.active .opener:after {content: '\2796';/*-*/}
+.opened {padding: 0 1em; background-color: white; max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out;}
+.active .opened {max-height: fit-content;}
 th,td{height:4em;width:4em;}
-td{background-color:white;border:1px solid black;padding:0;}
+#output{background-color:white;}
+td{border:1px solid black;padding:0;}
 .nut{background-color: black; height:0.4em}
 .noborder,.space1{background-color:white;border:none}
 .short{height:0.4em;}
 td{font-size:1em;}
 /*dot*/
 td:before{text-align:center;width:2em;height:2em;border-radius:1em;display:inline-block;margin: 0.2em 0 0 -1em;}
+.triangle {display: none;}
 .triangle input{width: 2em;}
 .triangle:after{content:'';position:absolute;display:block;border-color:black transparent;border-style:solid;border-width:0 1em 1em 0;height:0;width:0;margin:-0.1em 0 0 0;}
 .dot:before{content:'';color:white;background-color:black;}
@@ -35,6 +43,8 @@ td:before{text-align:center;width:2em;height:2em;border-radius:1em;display:inlin
 .X:before{content:'\d7';font-weight:bold;font-size:1.3rem;width:1em;height:1em;margin:-1rem 0 -0.5rem -0.5rem;}
 /*open string empty dot*/
 .O:before{content:'';background-color:white;border:solid black 0.1em;width:1em;height:1em;margin:-0.8em 0 0.1em -0.3em;}
+#chord {margin:0;}
+.chordcell {height:1.4em; padding:0.2em;}
 .fulfilled1 {background: #90ee90;}
 .fulfilled2 {background: #50cc50; }
 .fulfilled3 {background: #20aa20}
@@ -278,10 +288,10 @@ function showchord(chord, input_tabnotes) {
          col.innerHTML += "(" +fufilled.join(",")+")";
          var fufilledlength = fufilled.length;
          if (fufilledlength > 3) fufilledlength = 3;
-         col.className ="fulfilled" + fufilledlength
+         col.className ="chordcell fulfilled" + fufilledlength
          
        } else {
-         col.className = "unfulfilled";
+         col.className = "chordcell unfulfilled";
        }
        chordrow.appendChild(col);
     }
@@ -349,7 +359,7 @@ window.onload = function(e) {
     var row1 = t.insertRow(1);
     for (i = 0; i < strings; i++) { 
         td = row1.appendChild(document.createElement('td'));
-        td.className = "noborder" + ' ' + notes[simplifyNote(string_notes[i])];
+        td.className = "short noborder" + ' ' + notes[simplifyNote(string_notes[i])];
     }
     var row2 = t.insertRow(2);
     row2.className = "short";
@@ -390,7 +400,6 @@ window.onload = function(e) {
 <noscript>Javascript is required for this page to function.</noscript>
 <div id="main" style="display:none;">
 <h3>fretboard chord chart diagrams generator</h3>
-click a note for each string
 <div>
 <select id="chord_root" onchange="update()">
 	<!--
@@ -457,6 +466,15 @@ click a note for each string
   <option value="0,3,6,10">half-diminished (&#x2300;7)</option>
 </select>
 <table id="chord"></table>
+</div>
+<div class="openable">
+  <button type="button" class="opener" onclick="this.parentElement.classList.toggle('active');">Help</button>
+  <div class="opened">
+    <p>select desired chord using the 2 dropdowns above ^^</p>
+          <p>the notes for that chord are shown in the boxes below the dropdown</p>
+    <p>red color above means u dont have that note for the selected chord. it may sound wrong. <br><br> (green color means all the notes of the chord are being played, aim for all green)</p>
+          <p>make sure u click a note for each non open string, if not, there will be muted strings in the middle of played strings which is not how strumming works (unless u are plucking?)</p>
+  </div>
 </div>
 <div id="output"></div>
 </div>
