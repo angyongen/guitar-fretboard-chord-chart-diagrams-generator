@@ -58,7 +58,7 @@ var strings = 6;
 //var string_notes = [40,45,50,55,59,64]; 
 //Right to left: ebgdae every body goes down and eat
 var string_notes = [40,45,50,55,59,64]; 
-
+var lasttabnotes;
 var string_initialiser = [-1,-1,-1,-1,-1,-1];
 var string_initialiser_chord = [-1,-1,-1,-1,-1,-1]; //selected chord has open string, < initialiser
 var string_options = [-1,-1,-1,-1,-1,-1];
@@ -271,8 +271,8 @@ function modifyRows(newrows) {
         td.className = "noborder";
     }
 }
-function showchord(chord, input_tabnotes) {
-  tabnotes = input_tabnotes.slice();
+function showchord(chord, tabnotes) {
+  lasttabnotes = tabnotes.slice();
 	chordrow.innerHTML = "";
     for (n = 0; n < chord.length; n++) {
       var fufilled = [];
